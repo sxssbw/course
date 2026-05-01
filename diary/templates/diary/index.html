@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Дневник питания</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
             font-family: Arial;
@@ -9,12 +10,10 @@
             margin: 0;
             padding: 20px;
         }
-
         .container {
             max-width: 900px;
             margin: auto;
         }
-
         .card {
             background: white;
             padding: 15px;
@@ -22,45 +21,44 @@
             margin-bottom: 15px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
         .nav a {
             text-decoration: none;
             font-size: 20px;
             margin: 0 10px;
         }
-
         .progress-bar {
             width: 100%;
             background: #eee;
             border-radius: 10px;
             overflow: hidden;
         }
-
         .progress {
             height: 18px;
             background: #F7B557;
         }
-
         .meal {
             margin-top: 10px;
         }
-
         .meal-title {
             font-weight: bold;
             margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-
+        .meal-title a {
+            text-decoration: none;
+            color: inherit;
+        }
         .stats {
             display: flex;
             justify-content: space-between;
         }
-
         .stat {
             padding: 10px;
             border-radius: 10px;
@@ -69,7 +67,6 @@
             margin-right: 10px;
             text-align: center;
         }
-
         .stat:last-child {
             margin-right: 0;
         }
@@ -86,8 +83,6 @@
             <strong>{{ date_str }}</strong>
             <a href="/?date={{ next_day }}">→</a>
         </div>
-
-        <!-- <a href="/add/?date={{ date_str }}">➕ Добавить</a> -->
     </div>
 
     <!-- КАЛОРИИ -->
@@ -112,10 +107,11 @@
         <div class="stat">🍞 Углеводы<br>{{ total_carbs }}</div>
     </div>
 
-    <!-- ПРИЁМЫ ПИЩИ -->
+    <!-- Завтрак -->
     <div class="card">
-        <h3>Завтрак
-            <a href="/add/?date={{ date_str }}&meal=breakfast">➕</a>
+        <h3 class="meal-title">
+            <a href="/meal/breakfast/?date={{ date_str }}">Завтрак</a>
+            <a href="/meal/breakfast/?date={{ date_str }}" style="font-size: 20px;">➕</a>
         </h3>
         {% for item in meals.breakfast %}
             <div class="meal">{{ item.product.name }} — {{ item.grams }} г</div>
@@ -124,9 +120,11 @@
         {% endfor %}
     </div>
 
+    <!-- Обед -->
     <div class="card">
-        <h3>Обед
-            <a href="/add/?date={{ date_str }}&meal=lunch">➕</a>
+        <h3 class="meal-title">
+            <a href="/meal/lunch/?date={{ date_str }}">Обед</a>
+            <a href="/meal/lunch/?date={{ date_str }}" style="font-size: 20px;">➕</a>
         </h3>
         {% for item in meals.lunch %}
             <div class="meal">{{ item.product.name }} — {{ item.grams }} г</div>
@@ -135,9 +133,11 @@
         {% endfor %}
     </div>
 
+    <!-- Ужин -->
     <div class="card">
-        <h3>Ужин
-            <a href="/add/?date={{ date_str }}&meal=dinner">➕</a>
+        <h3 class="meal-title">
+            <a href="/meal/dinner/?date={{ date_str }}">Ужин</a>
+            <a href="/meal/dinner/?date={{ date_str }}" style="font-size: 20px;">➕</a>
         </h3>
         {% for item in meals.dinner %}
             <div class="meal">{{ item.product.name }} — {{ item.grams }} г</div>
@@ -146,9 +146,11 @@
         {% endfor %}
     </div>
 
+    <!-- Перекус -->
     <div class="card">
-        <h3>Перекус
-            <a href="/add/?date={{ date_str }}&meal=snack">➕</a>
+        <h3 class="meal-title">
+            <a href="/meal/snack/?date={{ date_str }}">Перекус</a>
+            <a href="/meal/snack/?date={{ date_str }}" style="font-size: 20px;">➕</a>
         </h3>
         {% for item in meals.snack %}
             <div class="meal">{{ item.product.name }} — {{ item.grams }} г</div>

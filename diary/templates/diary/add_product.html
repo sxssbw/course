@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Добавить продукт</title>
 
+    <title>Добавить продукт</title>
     <style>
         body {
             font-family: Arial;
@@ -31,27 +31,18 @@
             border: none;
             border-radius: 8px;
         }
-
-        a {
-            display: block;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
 
 <div class="card">
-
-    <h2>Добавить продукт</h2>
+    <h2>Добавить свой продукт</h2>
 
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Сохранить продукт</button>
+        <button type="submit">Сохранить</button>
     </form>
-
-    <a href="/add/">← Назад</a>
-
 </div>
 
 </body>

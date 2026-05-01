@@ -1,7 +1,22 @@
-<h2>Регистрация</h2>
-
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Зарегистрироваться</button>
-</form>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Регистрация</title>
+    <style>
+        body { font-family: Arial; background: #f6f7fb; padding: 20px; }
+        .card { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 12px; }
+        button { width: 100%; padding: 10px; background: #F7B557; border: none; border-radius: 8px; cursor: pointer; }
+        input { width: 100%; padding: 8px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Регистрация</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+</div>
+</body>
+</html>

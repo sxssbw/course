@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ meal_name }} – {{ date_str }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial;
+            background: #f6f7fb;
+            padding: 20px;
+        }
+        .card {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .entry-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+        .entry-row span {
+            flex: 1;
+            font-size: 16px;
+        }
+        .entry-row input {
+            width: 80px;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        .btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-orange {
+            background: #F7B557;
+            color: white;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-small {
+            padding: 4px 10px;
+            font-size: 13px;
+        }
+        .search-box {
+            margin-top: 25px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        .search-results div {
+            border-bottom: 1px solid #ddd;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #333;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <a href="/?date={{ date_str }}" class="back-link">← Назад к дневнику</a>
+    <h2>{{ meal_name }} ({{ date_str }})</h2>
+
+    <!-- Текущие записи -->
+    <div id="entries">
+        {% for entry in entries %}
+        <div class="entry-row" id="entry-{{ entry.id }}">
+            <span>{{ entry.product.name }}</span>
+            <input type="number" value="{{ entry.grams }}" min="0.1" step="0.1"
+                   onchange="updateGrams({{ entry.id }}, this.value)">
+            <button class="btn btn-danger btn-small" onclick="deleteEntry({{ entry.id }})">Удалить</button>
+        </div>
+        {% empty %}
+        <p>Нет добавленных продуктов</p>
+        {% endfor %}
+    </div>
+
+    <!-- Добавление нового продукта -->
+    <div class="search-box">
+        <h3>Добавить продукт</h3>
+        <input type="text" id="search" placeholder="Поиск продукта...">
+        <div id="results" class="search-results"></div>
+    </div>
+</div>
+
+<script>
+const meal = "{{ meal }}";
+const dateStr = "{{ date_str }}";
+const csrftoken = getCookie('csrftoken');
+
+// CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+        document.cookie.split(';').forEach(cookie => {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+            }
+        });
+    }
+    return cookieValue;
+}
+
+// Поиск продуктов
+document.getElementById("search").addEventListener("input", function () {
+    let q = this.value.trim();
+    if (q.length < 1) {
+        document.getElementById("results").innerHTML = "";
+        return;
+    }
+
+    fetch(`/search-products/?q=${encodeURIComponent(q)}`)
+        .then(res => res.json())
+        .then(data => {
+            let html = "";
+            data.forEach(p => {
+                html += `
+                    <div>
+                        <span style="flex:1"><b>${p.name}</b> (${p.calories} ккал)</span>
+                        <input type="number" id="add-grams-${p.id}" placeholder="граммы" style="width:70px;">
+                        <button class="btn btn-orange btn-small" onclick="addProduct(${p.id}, '${p.name}')">Добавить</button>
+                    </div>
+                `;
+            });
+            document.getElementById("results").innerHTML = html;
+        });
+});
+
+// Добавление продукта
+function addProduct(productId, productName) {
+    let gramsInput = document.getElementById(`add-grams-${productId}`);
+    let grams = parseFloat(gramsInput?.value);
+    if (!grams || grams <= 0) {
+        alert("Введите корректные граммы");
+        return;
+    }
+
+    fetch('/add-entry-api/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+            meal: meal,
+            date: dateStr,
+            entries: [{
+                product_id: productId,
+                grams: grams,
+                name: productName
+            }]
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();  // обновляем, чтобы увидеть изменения
+        } else {
+            alert('Ошибка при добавлении');
+        }
+    });
+}
+
+// Изменение граммов
+function updateGrams(entryId, newGrams) {
+    newGrams = parseFloat(newGrams);
+    if (isNaN(newGrams) || newGrams <= 0) {
+        alert('Некорректное значение');
+        return;
+    }
+
+    fetch(`/update-entry/${entryId}/`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ grams: newGrams })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();   // пересчёт на главной странице после возврата
+        } else {
+            alert('Ошибка обновления: ' + (data.error || ''));
+        }
+    });
+}
+
+// Удаление записи
+function deleteEntry(entryId) {
+    if (!confirm('Удалить этот продукт?')) return;
+
+    fetch(`/delete-entry/${entryId}/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': csrftoken
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Ошибка удаления');
+        }
+    });
+}
+</script>
+
+</body>
+</html>

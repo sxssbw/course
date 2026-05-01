@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import FoodEntry
 from django import forms
 from .forms import FoodEntryForm
@@ -8,12 +8,14 @@ from django.contrib.auth import login
 from .forms import RegisterForm
 from .models import Profile
 from .forms import ProfileForm
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from .models import Product
 from .forms import ProductForm
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.db.models.functions import Lower
+from django.views.decorators.http import require_http_methods
+
 
 @login_required
 def add_entry_api(request):
@@ -22,6 +24,15 @@ def add_entry_api(request):
 
         entries = data.get('entries', [])
         meal = data.get('meal', 'breakfast')
+        entry_date = data.get('date', None)
+
+        if entry_date:
+            try:
+                entry_date = date.fromisoformat(entry_date)
+            except (ValueError, TypeError):
+                entry_date = date.today()
+        else:
+            entry_date = date.today()
 
         for item in entries:
             product = Product.objects.filter(id=item['product_id']).first()
@@ -32,10 +43,54 @@ def add_entry_api(request):
                     product=product,
                     grams=item['grams'],
                     meal_type=meal,
-                    date=date.today()
+                    date=entry_date
                 )
 
-        return JsonResponse({'success': True})    
+        return JsonResponse({'success': True})
+
+
+@login_required
+@require_http_methods(["PATCH", "POST"])
+def update_entry(request, entry_id):
+    try:
+        entry = FoodEntry.objects.get(id=entry_id, user=request.user)
+    except FoodEntry.DoesNotExist:
+        return JsonResponse({'error': 'Запись не найдена'}, status=404)
+
+    if request.method in ('PATCH', 'POST'):
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Неверный JSON'}, status=400)
+
+        new_grams = data.get('grams')
+        if new_grams is not None:
+            try:
+                new_grams = float(new_grams)
+                if new_grams <= 0:
+                    return JsonResponse({'error': 'Граммы должны быть положительными'}, status=400)
+                entry.grams = new_grams
+                entry.save()
+                return JsonResponse({'success': True})
+            except (ValueError, TypeError):
+                return JsonResponse({'error': 'Некорректное значение граммов'}, status=400)
+        else:
+            return JsonResponse({'error': 'Поле grams обязательно'}, status=400)
+
+    return JsonResponse({'error': 'Метод не разрешён'}, status=405)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_entry(request, entry_id):
+    try:
+        entry = FoodEntry.objects.get(id=entry_id, user=request.user)
+    except FoodEntry.DoesNotExist:
+        return JsonResponse({'error': 'Запись не найдена'}, status=404)
+
+    entry.delete()
+    return JsonResponse({'success': True})
+
 
 @login_required
 def add_product(request):
@@ -52,6 +107,7 @@ def add_product(request):
     return render(request, 'diary/add_product.html', {
         'form': form
     })
+
 
 def search_products(request):
     query = request.GET.get('q', '').strip().lower()
@@ -100,6 +156,7 @@ def profile_setup(request):
     return render(request, 'diary/profile_setup.html', {
         'form': form
     })
+
 
 def register(request):
     if request.method == 'POST':
@@ -154,9 +211,6 @@ def index(request):
         total_fats += product.fats * factor
         total_carbs += product.carbs * factor
 
-    # profile = request.user.profile
-    # calories_goal = profile.daily_calories_goal
-
     profile = None
     calories_goal = 2000
 
@@ -168,8 +222,8 @@ def index(request):
             pass
 
     calories_percent = (total_calories / calories_goal) * 100 if calories_goal else 0
-
     calories_percent = max(0, min(calories_percent, 100))
+
     prev_day = selected_date - timedelta(days=1)
     next_day = selected_date + timedelta(days=1)
 
@@ -188,6 +242,7 @@ def index(request):
         'calories_goal': calories_goal,
         'calories_percent': round(calories_percent, 1),
     }
+
     if not hasattr(request.user, 'profile') or not request.user.profile.height:
         return redirect('/profile-setup/')
     return render(request, 'diary/index.html', context)
@@ -223,3 +278,43 @@ def add_food(request):
         'date': selected_date,
         'meal': meal
     })
+
+
+@login_required
+def meal_detail(request, meal):
+    # Проверка допустимых типов приёма пищи
+    valid_meals = ['breakfast', 'lunch', 'dinner', 'snack']
+    if meal not in valid_meals:
+        raise Http404("Неизвестный тип приёма пищи")
+
+    # Получение даты
+    selected_date = request.GET.get('date')
+    try:
+        if selected_date:
+            selected_date = date.fromisoformat(selected_date)
+        else:
+            selected_date = date.today()
+    except (ValueError, TypeError):
+        selected_date = date.today()
+
+    entries = FoodEntry.objects.filter(
+        user=request.user,
+        meal_type=meal,
+        date=selected_date
+    ).select_related('product')
+
+    meal_names = {
+        'breakfast': 'Завтрак',
+        'lunch': 'Обед',
+        'dinner': 'Ужин',
+        'snack': 'Перекус'
+    }
+
+    context = {
+        'meal': meal,
+        'meal_name': meal_names[meal],
+        'date': selected_date,
+        'date_str': selected_date.isoformat(),
+        'entries': entries,
+    }
+    return render(request, 'diary/meal_detail.html', context)
