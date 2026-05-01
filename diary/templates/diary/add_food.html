@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Добавить еду</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f6f7fb;
+            padding: 20px;
+        }
+
+        .card {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 8px 12px;
+            background: #F7B557;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .product, .selected {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+
+        .selected {
+            background: #f0f2f7;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+
+    <h2>Добавить еду</h2>
+
+    <input type="text" id="search" placeholder="Поиск продукта...">
+
+    <div id="results"></div>
+
+    <h3>Добавленные продукты:</h3>
+    <div id="selected"></div>
+
+    <button onclick="submitAll()">✅ Готово</button>
+
+    <hr>
+
+    <a href="/add-product/">➕ Создать продукт</a><br>
+    <a href="/">← Назад</a>
+
+</div>
+
+<script>
+let selectedFoods = [];
+
+// CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+        document.cookie.split(';').forEach(cookie => {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+            }
+        });
+    }
+    return cookieValue;
+}
+
+// 🔍 ПОИСК (без регистра)
+document.getElementById("search").addEventListener("input", function () {
+    let q = this.value.trim();
+
+    // 🚫 не ищем если меньше 1 символа
+    if (q.length < 1) {
+        document.getElementById("results").innerHTML = "";
+        return;
+    }
+
+    fetch(`/search-products/?q=${encodeURIComponent(q)}`)
+        .then(res => res.json())
+        .then(data => {
+            let html = "";
+
+            data.forEach(p => {
+                html += `
+                    <div class="product">
+                        <b>${p.name}</b> (${p.calories} ккал)
+
+                        <input type="number" id="g-${p.id}" placeholder="граммы">
+
+                        <button onclick="addFood(${p.id}, '${p.name}')">
+                            Добавить
+                        </button>
+                    </div>
+                `;
+            });
+
+            document.getElementById("results").innerHTML = html;
+        });
+});
+
+// ➕ ДОБАВЛЕНИЕ В СПИСОК
+function addFood(id, name) {
+    let grams = document.getElementById(`g-${id}`).value;
+
+    grams = parseFloat(grams);
+
+    if (!grams || grams <= 0) {
+        alert("Введите корректные граммы");
+        return;
+    }
+
+    selectedFoods.push({
+        product_id: id,
+        name: name,
+        grams: grams
+    });
+
+    renderSelected();
+}
+
+// 📋 ОТОБРАЖЕНИЕ СПИСКА
+function renderSelected() {
+    let html = "";
+
+    selectedFoods.forEach((item, index) => {
+        html += `
+            <div class="selected">
+                <b>${item.name}</b><br>
+                ${item.grams} г
+
+                <br>
+                <button onclick="edit(${index})">✏️</button>
+                <button onclick="remove(${index})">❌</button>
+            </div>
+        `;
+    });
+
+    document.getElementById("selected").innerHTML = html;
+}
+
+// ❌ УДАЛЕНИЕ
+function remove(index) {
+    selectedFoods.splice(index, 1);
+    renderSelected();
+}
+
+// 🚀 ОТПРАВКА ВСЕГО
+function submitAll() {
+    if (selectedFoods.length === 0) {
+        alert("Ничего не добавлено");
+        return;
+    }
+
+    fetch("/add-entry-api/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({
+            meal: "{{ meal }}",
+            entries: selectedFoods
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = "/";
+        }
+    });
+}
+
+function edit(index) {
+    let newGrams = prompt("Введите новое количество грамм:", selectedFoods[index].grams);
+
+    newGrams = parseFloat(newGrams);
+
+    if (!newGrams || newGrams <= 0) {
+        alert("Некорректное значение");
+        return;
+    }
+
+    selectedFoods[index].grams = newGrams;
+    renderSelected();
+}
+</script>
+
+</body>
+</html>

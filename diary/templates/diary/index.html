@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Дневник питания</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f6f7fb;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav a {
+            text-decoration: none;
+            font-size: 20px;
+            margin: 0 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 18px;
+            background: #F7B557;
+        }
+
+        .meal {
+            margin-top: 10px;
+        }
+
+        .meal-title {
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat {
+            padding: 10px;
+            border-radius: 10px;
+            background: #fff;
+            flex: 1;
+            margin-right: 10px;
+            text-align: center;
+        }
+
+        .stat:last-child {
+            margin-right: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="card header">
+        <div class="nav">
+            <a href="/?date={{ prev_day }}">←</a>
+            <strong>{{ date_str }}</strong>
+            <a href="/?date={{ next_day }}">→</a>
+        </div>
+
+        <!-- <a href="/add/?date={{ date_str }}">➕ Добавить</a> -->
+    </div>
+
+    <!-- КАЛОРИИ -->
+    <div class="card">
+        <h3>Калории</h3>
+        <p>{{ total_calories }} / {{ calories_goal }}</p>
+
+        <div class="progress-bar">
+            <div class="progress"
+                style="
+                    width: {{ calories_percent }}%;
+                    background: {% if calories_percent < 80 %}#F7B557{% elif calories_percent < 100 %}#9197AA{% else %}#C1521E{% endif %};
+                ">
+            </div>
+        </div>
+    </div>
+
+    <!-- СТАТИСТИКА -->
+    <div class="card stats">
+        <div class="stat">🥩 Белки<br>{{ total_proteins }}</div>
+        <div class="stat">🧈 Жиры<br>{{ total_fats }}</div>
+        <div class="stat">🍞 Углеводы<br>{{ total_carbs }}</div>
+    </div>
+
+    <!-- ПРИЁМЫ ПИЩИ -->
+    <div class="card">
+        <h3>Завтрак
+            <a href="/add/?date={{ date_str }}&meal=breakfast">➕</a>
+        </h3>
+        {% for item in meals.breakfast %}
+            <div class="meal">{{ item.product.name }} — {{ item.grams }} г</div>
+        {% empty %}
+            <div class="meal">Нет записей</div>
+        {% endfor %}
+    </div>
+
+    <div class="card">
+        <h3>Обед
+            <a href="/add/?date={{ date_str }}&meal=lunch">➕</a>
+        </h3>
+        {% for item in meals.lunch %}
+            <div class="meal">{{ item.product.name }} — {{ item.grams }} г</div>
+        {% empty %}
+            <div class="meal">Нет записей</div>
+        {% endfor %}
+    </div>
+
+    <div class="card">
+        <h3>Ужин
+            <a href="/add/?date={{ date_str }}&meal=dinner">➕</a>
+        </h3>
+        {% for item in meals.dinner %}
+            <div class="meal">{{ item.product.name }} — {{ item.grams }} г</div>
+        {% empty %}
+            <div class="meal">Нет записей</div>
+        {% endfor %}
+    </div>
+
+    <div class="card">
+        <h3>Перекус
+            <a href="/add/?date={{ date_str }}&meal=snack">➕</a>
+        </h3>
+        {% for item in meals.snack %}
+            <div class="meal">{{ item.product.name }} — {{ item.grams }} г</div>
+        {% empty %}
+            <div class="meal">Нет записей</div>
+        {% endfor %}
+    </div>
+
+</div>
+
+</body>
+</html>
