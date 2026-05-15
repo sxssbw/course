@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import date
 
 
 class Profile(models.Model):
@@ -15,14 +16,6 @@ class Profile(models.Model):
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-
-    # height = models.FloatField()
-    # weight = models.FloatField()
-    # age = models.IntegerField()
-    # gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
-
-    # goal = models.CharField(max_length=10, choices=GOAL_CHOICES)
-
     height = models.FloatField(null=True, blank=True)
     weight = models.FloatField(null=True, blank=True)
     age = models.IntegerField(null=True, blank=True)
@@ -86,3 +79,11 @@ class FoodEntry(models.Model):
 
     def __str__(self):
         return f"{self.product.name} ({self.grams} г)"
+    
+class WeightLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='weight_logs')
+    weight = models.FloatField()
+    date = models.DateField(default=date.today)   
+
+    class Meta:
+        ordering = ['-date'] 

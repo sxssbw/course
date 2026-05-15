@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой профиль</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        /* ===== iOS-STYLE GLASSMORPHISM HEADER - FULL WIDTH ===== */
+        .header-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+
+            /* iOS glassmorphism */
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+            /* Subtle bottom border for depth */
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+            /* Smooth transition when scrolling */
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* When scrolled - slightly more opaque */
+        .header-wrapper.scrolled {
+            background: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+        }
+
+        .page-header {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #6b7280;
+        }
+
+        .edit-btn {
+            background: #F7B557;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .edit-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Content container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        /* User info */
+        .user-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #9ca3af;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .user-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .user-email {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-item {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .section-title {
+            font-size: 16px;
+            color: #9ca3af;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .goal-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .goal-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #9ca3af;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .goal-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .goal-subtext {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        .logout-section {
+            text-align: center;
+            padding: 16px;
+        }
+
+        .logout-link {
+            color: #ef4444;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logout-link:hover {
+            opacity: 0.8;
+        }
+
+        /* Edit form */
+        .edit-form {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .edit-form.active {
+            display: block;
+        }
+
+        .edit-form form p {
+            margin-bottom: 16px;
+        }
+
+        .edit-form form p label {
+            display: block;
+            margin-bottom: 6px;
+            color: #374151;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .edit-form form p input,
+        .edit-form form p select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #374151;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .edit-form form p input:focus,
+        .edit-form form p select:focus {
+            border-color: #F7B557;
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: 12px;
+            background: #F7B557;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-save:hover {
+            opacity: 0.9;
+        }
+
+        .helptext { display: none; }
+        .errorlist { color: #ef4444; font-size: 12px; list-style: none; margin-top: 4px; }
+
+        /* Weight form */
+        .weight-form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .weight-form {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .weight-form input[type="number"],
+        .weight-form input[type="date"] {
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            flex: 1;
+        }
+
+        .weight-form input[type="number"]:focus,
+        .weight-form input[type="date"]:focus {
+            border-color: #F7B557;
+        }
+
+        .weight-form button {
+            padding: 10px 24px;
+            background: #F7B557;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .weight-form button:hover {
+            opacity: 0.9;
+        }
+
+        /* Chart */
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <!-- iOS Glassmorphism Header - FULL WIDTH -->
+    <div class="header-wrapper" id="stickyHeader">
+        <div class="page-header">
+            <a href="/" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Профиль
+            </a>
+            <button class="edit-btn" onclick="toggleEdit()">Редактировать</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- User Card -->
+        <div class="card">
+            <div class="user-header">
+                <div class="avatar">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="user-name">{{ user.username|default:"Пользователь"}}</div>
+                    <div class="user-email">{{ user.email|default:"example@mail.com" }}</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Рост</div>
+                    <div class="stat-value">{{ profile.height }} см</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Вес</div>
+                    <div class="stat-value">{{ profile.weight }} кг</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Возраст</div>
+                    <div class="stat-value">{{ profile.age }} лет</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Пол</div>
+                    <div class="stat-value">{{ profile.get_gender_display }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goal Card -->
+        <div class="card">
+            <div class="section-title">Цель</div>
+            <div class="goal-item">
+                <div class="goal-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="goal-text">{{ profile.get_goal_display }}</div>
+                    <div class="goal-subtext">Норма: {{ profile.daily_calories_goal }} ккал/день</div>
+                </div>
+            </div>
+
+            <!-- Edit Form (profile) -->
+            <div class="edit-form" id="editForm">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn-save">Сохранить</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Weight Form -->
+        <div class="weight-form-card">
+            <h3 style="margin-bottom: 16px; color: #374151;">Записать вес</h3>
+            <form method="post" class="weight-form">
+                {% csrf_token %}
+                <input type="number" name="weight" step="0.1" placeholder="Вес (кг)" required>
+                <input type="date" name="date" placeholder="Дата">
+                <button type="submit">Сохранить</button>
+            </form>
+        </div>
+
+        <!-- Weight Chart -->
+        <div class="chart-card">
+            <h3 style="margin-bottom: 16px; color: #374151;">Динамика веса (90 дней)</h3>
+            <canvas id="weightChart" width="400" height="200"></canvas>
+        </div>
+
+        <!-- Logout -->
+        <div class="card logout-section">
+            <a href="{% url 'logout' %}" class="logout-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                </svg>
+                Выйти из аккаунта
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function toggleEdit() {
+            const form = document.getElementById('editForm');
+            form.classList.toggle('active');
+        }
+
+        // ===== iOS-STYLE SCROLL EFFECT =====
+        const header = document.getElementById('stickyHeader');
+        let lastScroll = 0;
+
+        window.addEventListener('scroll', function() {
+            const currentScroll = window.pageYOffset;
+
+            // Add "scrolled" class when user scrolls down
+            if (currentScroll > 10) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+
+            lastScroll = currentScroll;
+        }, { passive: true });
+
+        // Weight Chart
+        const weightsData = JSON.parse('{{ weights_data|safe }}');
+        if (weightsData.length > 0) {
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: weightsData.map(item => item.date),
+                    datasets: [{
+                        label: 'Вес (кг)',
+                        data: weightsData.map(item => item.weight),
+                        borderColor: '#F7B557',
+                        backgroundColor: 'rgba(247, 181, 87, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#F7B557'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: '#f3f4f6'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('weightChart').insertAdjacentHTML('afterend', 
+                '<p style="text-align:center; color:#9ca3af; margin-top:12px;">Нет данных для отображения</p>');
+        }
+    </script>
+</body>
+</html>

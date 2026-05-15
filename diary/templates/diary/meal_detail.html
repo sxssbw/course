@@ -1,120 +1,355 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>{{ meal_name }} – {{ date_str }}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить продукт</title>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: Arial;
-            background: #f6f7fb;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding-bottom: 20px;
         }
-        .card {
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 16px;
         }
-        h2 {
-            margin-top: 0;
-        }
-        .entry-row {
+
+        .page-header {
             display: flex;
             align-items: center;
-            margin-bottom: 12px;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 4px 0;
+        }
+
+        .back-link {
+            color: #9ca3af;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-link svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .page-title {
+            color: #9ca3af;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .search-section {
+            margin-bottom: 16px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-input-wrapper svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            width: 18px;
+            height: 18px;
+        }
+
+        #search {
+            width: 100%;
+            padding: 12px 12px 12px 42px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #374151;
+            outline: none;
+            transition: border-color 0.2s;
+            background: white;
+        }
+
+        #search:focus {
+            border-color: #F7B557;
+        }
+
+        #search::placeholder {
+            color: #9ca3af;
+        }
+
+        .create-product-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            color: #F7B557;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            text-align: center;
+            margin-bottom: 16px;
+            transition: background 0.2s;
+        }
+
+        .create-product-btn:hover {
+            background: #fffbeb;
+        }
+
+        .create-product-btn svg {
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+            margin-right: 6px;
+            margin-top: -2px;
+        }
+
+        .product-list {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .product-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-item:hover {
+            background: #fafafa;
+        }
+
+        .product-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+
+        .product-details {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .add-form {
+            display: none;
+            padding: 12px 20px 16px;
+            background: #fafafa;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .add-form.active {
+            display: flex;
+            align-items: center;
             gap: 10px;
         }
-        .entry-row span {
+
+        .add-form input {
             flex: 1;
-            font-size: 16px;
-        }
-        .entry-row input {
-            width: 80px;
-            padding: 6px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-        }
-        .btn {
-            padding: 6px 14px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
             font-size: 14px;
+            outline: none;
         }
-        .btn-orange {
+
+        .add-form input:focus {
+            border-color: #F7B557;
+        }
+
+        .add-form .btn-add {
+            padding: 10px 20px;
             background: #F7B557;
             color: white;
-        }
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-        .btn-small {
-            padding: 4px 10px;
+            border: none;
+            border-radius: 10px;
             font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
         }
-        .search-box {
-            margin-top: 25px;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
+
+        .entries-section {
+            margin-top: 24px;
         }
-        .search-box input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
+
+        .entries-title {
+            font-size: 14px;
+            color: #9ca3af;
+            font-weight: 500;
+            margin-bottom: 12px;
+            padding: 0 4px;
         }
-        .search-results div {
-            border-bottom: 1px solid #ddd;
-            padding: 8px 0;
+
+        .entry-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .entry-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .entry-item:last-child {
+            border-bottom: none;
+        }
+
+        .entry-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+
+        .entry-details {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .entry-actions {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        .back-link {
-            display: inline-block;
-            margin-bottom: 15px;
-            color: #333;
-            text-decoration: none;
-            font-weight: bold;
+
+        .grams-input {
+            width: 70px;
+            padding: 8px 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+            outline: none;
+        }
+
+        .grams-input:focus {
+            border-color: #F7B557;
+        }
+
+        .btn-delete {
+            color: #ef4444;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .btn-delete:hover {
+            opacity: 1;
+        }
+
+        .btn-delete svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .search-results {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-top: 12px;
         }
     </style>
+<base target="_blank">
 </head>
 <body>
-
-<div class="card">
-    <a href="/?date={{ date_str }}" class="back-link">← Назад к дневнику</a>
-    <h2>{{ meal_name }} ({{ date_str }})</h2>
-
-    <!-- Текущие записи -->
-    <div id="entries">
-        {% for entry in entries %}
-        <div class="entry-row" id="entry-{{ entry.id }}">
-            <span>{{ entry.product.name }}</span>
-            <input type="number" value="{{ entry.grams }}" min="0.1" step="0.1"
-                   onchange="updateGrams({{ entry.id }}, this.value)">
-            <button class="btn btn-danger btn-small" onclick="deleteEntry({{ entry.id }})">Удалить</button>
+    <div class="container">
+        <div class="page-header">
+            <a href="/?date={{ date_str }}" class="back-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <span class="page-title">Добавить продукт</span>
         </div>
-        {% empty %}
-        <p>Нет добавленных продуктов</p>
-        {% endfor %}
-    </div>
 
-    <!-- Добавление нового продукта -->
-    <div class="search-box">
-        <h3>Добавить продукт</h3>
-        <input type="text" id="search" placeholder="Поиск продукта...">
-        <div id="results" class="search-results"></div>
+        <div class="search-section">
+            <div class="search-input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.3-4.3"/>
+                </svg>
+                <input type="text" id="search" placeholder="Поиск продуктов..." autocomplete="off">
+            </div>
+        </div>
+
+        <a href="/add-product/?next=/meal/{{ meal }}/?date={{ date_str }}&meal={{ meal }}&date={{ date_str }}" class="create-product-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Создать свой продукт
+        </a>
+
+        <div id="results" class="search-results" style="display: none;"></div>
+
+        <div class="entries-section">
+            <div class="entries-title">Текущие записи</div>
+
+            <div class="entry-card" id="entries">
+                {% for entry in entries %}
+                <div class="entry-item" id="entry-{{ entry.id }}">
+                    <div>
+                        <div class="entry-name">{{ entry.product.name }}</div>
+                        <div class="entry-details">{{ entry.grams }}г • {{ entry.calories|default:entry.product.calories }} ккал</div>
+                    </div>
+                    <div class="entry-actions">
+                        <input type="number" class="grams-input" value="{{ entry.grams }}" min="0.1" step="0.1"
+                               onchange="updateGrams({{ entry.id }}, this.value)">
+                        <button class="btn-delete" onclick="deleteEntry({{ entry.id }})" title="Удалить">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                <line x1="10" y1="11" x2="10" y2="17"/>
+                                <line x1="14" y1="11" x2="14" y2="17"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">Нет добавленных продуктов</div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
-</div>
 
 <script>
 const meal = "{{ meal }}";
 const dateStr = "{{ date_str }}";
 const csrftoken = getCookie('csrftoken');
 
-// CSRF
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie) {
@@ -128,11 +363,13 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// Поиск продуктов
 document.getElementById("search").addEventListener("input", function () {
     let q = this.value.trim();
+    let resultsDiv = document.getElementById("results");
+
     if (q.length < 1) {
-        document.getElementById("results").innerHTML = "";
+        resultsDiv.style.display = "none";
+        resultsDiv.innerHTML = "";
         return;
     }
 
@@ -142,18 +379,30 @@ document.getElementById("search").addEventListener("input", function () {
             let html = "";
             data.forEach(p => {
                 html += `
-                    <div>
-                        <span style="flex:1"><b>${p.name}</b> (${p.calories} ккал)</span>
-                        <input type="number" id="add-grams-${p.id}" placeholder="граммы" style="width:70px;">
-                        <button class="btn btn-orange btn-small" onclick="addProduct(${p.id}, '${p.name}')">Добавить</button>
+                    <div class="product-item" onclick="showAddForm(${p.id}, '${p.name.replace(/'/g, "\'")}', ${p.calories})">
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-details">${p.calories} ккал • Б:${p.proteins}г Ж:${p.fats}г У:${p.carbs}г (на 100г)</div>
+                    </div>
+                    <div class="add-form" id="add-form-${p.id}">
+                        <input type="number" id="add-grams-${p.id}" placeholder="Граммы" min="0.1" step="0.1">
+                        <button class="btn-add" onclick="addProduct(${p.id}, '${p.name.replace(/'/g, "\'")}')">Добавить</button>
                     </div>
                 `;
             });
-            document.getElementById("results").innerHTML = html;
+            resultsDiv.innerHTML = html;
+            resultsDiv.style.display = "block";
         });
 });
 
-// Добавление продукта
+function showAddForm(productId, productName, calories) {
+    document.querySelectorAll('.add-form').forEach(f => f.classList.remove('active'));
+    let form = document.getElementById(`add-form-${productId}`);
+    if (form) {
+        form.classList.add('active');
+        document.getElementById(`add-grams-${productId}`).focus();
+    }
+}
+
 function addProduct(productId, productName) {
     let gramsInput = document.getElementById(`add-grams-${productId}`);
     let grams = parseFloat(gramsInput?.value);
@@ -181,14 +430,13 @@ function addProduct(productId, productName) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            location.reload();  // обновляем, чтобы увидеть изменения
+            location.reload();
         } else {
             alert('Ошибка при добавлении');
         }
     });
 }
 
-// Изменение граммов
 function updateGrams(entryId, newGrams) {
     newGrams = parseFloat(newGrams);
     if (isNaN(newGrams) || newGrams <= 0) {
@@ -207,14 +455,13 @@ function updateGrams(entryId, newGrams) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            location.reload();   // пересчёт на главной странице после возврата
+            location.reload();
         } else {
             alert('Ошибка обновления: ' + (data.error || ''));
         }
     });
 }
 
-// Удаление записи
 function deleteEntry(entryId) {
     if (!confirm('Удалить этот продукт?')) return;
 
@@ -234,6 +481,5 @@ function deleteEntry(entryId) {
     });
 }
 </script>
-
 </body>
 </html>
