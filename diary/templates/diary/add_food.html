@@ -70,7 +70,6 @@
 <script>
 let selectedFoods = [];
 
-// CSRF
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie) {
@@ -84,11 +83,9 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// 🔍 ПОИСК (без регистра)
 document.getElementById("search").addEventListener("input", function () {
     let q = this.value.trim();
 
-    // 🚫 не ищем если меньше 1 символа
     if (q.length < 1) {
         document.getElementById("results").innerHTML = "";
         return;
@@ -117,7 +114,6 @@ document.getElementById("search").addEventListener("input", function () {
         });
 });
 
-// ➕ ДОБАВЛЕНИЕ В СПИСОК
 function addFood(id, name) {
     let grams = document.getElementById(`g-${id}`).value;
 
@@ -137,7 +133,6 @@ function addFood(id, name) {
     renderSelected();
 }
 
-// 📋 ОТОБРАЖЕНИЕ СПИСКА
 function renderSelected() {
     let html = "";
 
@@ -157,13 +152,11 @@ function renderSelected() {
     document.getElementById("selected").innerHTML = html;
 }
 
-// ❌ УДАЛЕНИЕ
 function remove(index) {
     selectedFoods.splice(index, 1);
     renderSelected();
 }
 
-// 🚀 ОТПРАВКА ВСЕГО
 function submitAll() {
     if (selectedFoods.length === 0) {
         alert("Ничего не добавлено");

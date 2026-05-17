@@ -82,7 +82,6 @@ class ProfileForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Делаем все поля обязательными (кроме, возможно, goal)
         for field in ['height', 'weight', 'age', 'gender']:
             self.fields[field].required = True
 
